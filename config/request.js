@@ -1,3 +1,4 @@
-import supertest from 'supertest';
-const request = supertest('https://serverest.dev/');
-export default request;
+const supertest = require('supertest');
+const env = require('./env');
+
+module.exports = supertest(env.bookerBaseUrl);

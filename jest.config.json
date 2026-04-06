@@ -1,11 +1,7 @@
 {
   "verbose": true,
   "testTimeout": 30000,
-  "moduleDirectories": [
-    "node_modules",
-    "serve-rest-api-tests"
-  ],
-  "setupFilesAfterEnv": ["jest-extended/all"],
+  "testEnvironment": "node",
   "reporters": [
     "default",
     [
@@ -15,7 +11,7 @@
         "filename": "report.html",
         "expand": true,
         "openReport": false,
-        "pageTitle": "Test Report - SERVE REST API TESTS"
+        "pageTitle": "Test Report - Restful Booker API Test Suite"
       }
     ]
   ]

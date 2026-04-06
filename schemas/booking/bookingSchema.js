@@ -1,0 +1,46 @@
+module.exports = {
+  $id: 'booking',
+  type: 'object',
+  required: [
+    'firstname',
+    'lastname',
+    'totalprice',
+    'depositpaid',
+    'bookingdates',
+  ],
+  properties: {
+    firstname: {
+      type: 'string',
+      minLength: 1,
+    },
+    lastname: {
+      type: 'string',
+      minLength: 1,
+    },
+    totalprice: {
+      type: 'integer',
+    },
+    depositpaid: {
+      type: 'boolean',
+    },
+    bookingdates: {
+      type: 'object',
+      required: ['checkin', 'checkout'],
+      properties: {
+        checkin: {
+          type: 'string',
+          pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+        },
+        checkout: {
+          type: 'string',
+          pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+        },
+      },
+      additionalProperties: false,
+    },
+    additionalneeds: {
+      type: 'string',
+    },
+  },
+  additionalProperties: false,
+};
