@@ -1,7 +1,6 @@
-const authClient = require('../../helpers/authClient');
 const bookingClient = require('../../helpers/bookingClient');
-const CleanupRegistry = require('../../helpers/cleanupRegistry');
 const { buildBooking } = require('../../factories/bookingFactory');
+const { useAuthenticatedSuite } = require('../../helpers/authenticatedSuite');
 const { expectPlainTextResponse } = require('../../helpers/responseAssertions');
 const bookingCreatedSchema = require('../../schemas/booking/bookingCreatedSchema');
 const {
@@ -9,21 +8,12 @@ const {
 } = require('../../helpers/responseAssertions');
 
 describe('Booking Content Negotiation', () => {
-  const cleanup = new CleanupRegistry();
-  let authToken;
-
-  beforeAll(async () => {
-    authToken = await authClient.getToken();
-  });
-
-  afterAll(async () => {
-    await cleanup.cleanup(bookingClient, authToken);
-  });
+  const { trackBooking } = useAuthenticatedSuite();
 
   test('returns an xml payload when the booking is requested as xml', async () => {
     const createResponse = await bookingClient.createBooking(buildBooking());
     expectJsonSchemaResponse(createResponse, 200, bookingCreatedSchema);
-    cleanup.trackBooking(createResponse.body.bookingid);
+    trackBooking(createResponse.body.bookingid);
 
     const response = await bookingClient.getBookingAsXml(createResponse.body.bookingid);
 

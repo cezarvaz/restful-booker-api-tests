@@ -1,7 +1,6 @@
-const authClient = require('../../helpers/authClient');
 const bookingClient = require('../../helpers/bookingClient');
-const CleanupRegistry = require('../../helpers/cleanupRegistry');
 const { buildBooking } = require('../../factories/bookingFactory');
+const { useAuthenticatedSuite } = require('../../helpers/authenticatedSuite');
 const bookingSchema = require('../../schemas/booking/bookingSchema');
 const bookingCreatedSchema = require('../../schemas/booking/bookingCreatedSchema');
 const { expectNotFound } = require('../../helpers/knownQuirks');
@@ -10,16 +9,7 @@ const {
 } = require('../../helpers/responseAssertions');
 
 describe('Booking Read Scenarios', () => {
-  const cleanup = new CleanupRegistry();
-  let authToken;
-
-  beforeAll(async () => {
-    authToken = await authClient.getToken();
-  });
-
-  afterAll(async () => {
-    await cleanup.cleanup(bookingClient, authToken);
-  });
+  const { trackBooking } = useAuthenticatedSuite();
 
   test('retrieves a created booking and matches key fields field-by-field', async () => {
     const payload = buildBooking({
@@ -28,7 +18,7 @@ describe('Booking Read Scenarios', () => {
     });
     const createResponse = await bookingClient.createBooking(payload);
     expectJsonSchemaResponse(createResponse, 200, bookingCreatedSchema);
-    cleanup.trackBooking(createResponse.body.bookingid);
+    trackBooking(createResponse.body.bookingid);
 
     const getResponse = await bookingClient.getBooking(createResponse.body.bookingid);
 

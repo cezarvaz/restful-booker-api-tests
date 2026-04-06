@@ -1,7 +1,6 @@
-const authClient = require('../../helpers/authClient');
 const bookingClient = require('../../helpers/bookingClient');
-const CleanupRegistry = require('../../helpers/cleanupRegistry');
 const { buildBooking } = require('../../factories/bookingFactory');
+const { useAuthenticatedSuite } = require('../../helpers/authenticatedSuite');
 const bookingSchema = require('../../schemas/booking/bookingSchema');
 const bookingCreatedSchema = require('../../schemas/booking/bookingCreatedSchema');
 const { expectNotFound } = require('../../helpers/knownQuirks');
@@ -11,21 +10,12 @@ const {
 } = require('../../helpers/responseAssertions');
 
 describe('Booking Update Edge Cases', () => {
-  const cleanup = new CleanupRegistry();
-  let authToken;
-
-  beforeAll(async () => {
-    authToken = await authClient.getToken();
-  });
-
-  afterAll(async () => {
-    await cleanup.cleanup(bookingClient, authToken);
-  });
+  const suite = useAuthenticatedSuite();
 
   test('updates a booking with basic auth using PUT', async () => {
     const createResponse = await bookingClient.createBooking(buildBooking());
     expectJsonSchemaResponse(createResponse, 200, bookingCreatedSchema);
-    cleanup.trackBooking(createResponse.body.bookingid);
+    suite.trackBooking(createResponse.body.bookingid);
 
     const updateResponse = await bookingClient.updateBooking(
       createResponse.body.bookingid,
@@ -44,7 +34,7 @@ describe('Booking Update Edge Cases', () => {
     const updateResponse = await bookingClient.updateBooking(
       999999999,
       buildBooking(),
-      { token: authToken },
+      { token: suite.authToken },
     );
 
     expectNotFound(updateResponse);
@@ -55,7 +45,7 @@ describe('Booking Update Edge Cases', () => {
     const patchResponse = await bookingClient.patchBooking(
       999999999,
       { firstname: 'Ghost' },
-      { token: authToken },
+      { token: suite.authToken },
     );
 
     expectNotFound(patchResponse);
@@ -65,12 +55,12 @@ describe('Booking Update Edge Cases', () => {
   test('rejects partial put payloads with a bad request response', async () => {
     const createResponse = await bookingClient.createBooking(buildBooking());
     expectJsonSchemaResponse(createResponse, 200, bookingCreatedSchema);
-    cleanup.trackBooking(createResponse.body.bookingid);
+    suite.trackBooking(createResponse.body.bookingid);
 
     const updateResponse = await bookingClient.updateBooking(
       createResponse.body.bookingid,
       { firstname: 'PartialPutOnly' },
-      { token: authToken },
+      { token: suite.authToken },
     );
 
     expectPlainTextResponse(updateResponse, 400, 'Bad Request');

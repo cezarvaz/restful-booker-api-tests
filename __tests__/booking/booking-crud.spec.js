@@ -1,7 +1,6 @@
-const authClient = require('../../helpers/authClient');
 const bookingClient = require('../../helpers/bookingClient');
-const CleanupRegistry = require('../../helpers/cleanupRegistry');
 const { buildBooking } = require('../../factories/bookingFactory');
+const { useAuthenticatedSuite } = require('../../helpers/authenticatedSuite');
 const bookingSchema = require('../../schemas/booking/bookingSchema');
 const bookingCreatedSchema = require('../../schemas/booking/bookingCreatedSchema');
 const { expectNotFound } = require('../../helpers/knownQuirks');
@@ -10,23 +9,14 @@ const {
 } = require('../../helpers/responseAssertions');
 
 describe('Booking CRUD', () => {
-  const cleanup = new CleanupRegistry();
-  let authToken;
-
-  beforeAll(async () => {
-    authToken = await authClient.getToken();
-  });
-
-  afterAll(async () => {
-    await cleanup.cleanup(bookingClient, authToken);
-  });
+  const suite = useAuthenticatedSuite();
 
   test('creates a booking and retrieves it by id', async () => {
     const payload = buildBooking();
     const createResponse = await bookingClient.createBooking(payload);
 
     expectJsonSchemaResponse(createResponse, 200, bookingCreatedSchema);
-    cleanup.trackBooking(createResponse.body.bookingid);
+    suite.trackBooking(createResponse.body.bookingid);
     expect(createResponse.body.booking.firstname).toBe(payload.firstname);
 
     const getResponse = await bookingClient.getBooking(createResponse.body.bookingid);
@@ -37,7 +27,7 @@ describe('Booking CRUD', () => {
 
   test('updates a booking with PUT using token auth', async () => {
     const createResponse = await bookingClient.createBooking(buildBooking());
-    cleanup.trackBooking(createResponse.body.bookingid);
+    suite.trackBooking(createResponse.body.bookingid);
 
     const replacement = buildBooking({
       firstname: 'Updated',
@@ -54,7 +44,7 @@ describe('Booking CRUD', () => {
     const updateResponse = await bookingClient.updateBooking(
       createResponse.body.bookingid,
       replacement,
-      { token: authToken },
+      { token: suite.authToken },
     );
 
     expectJsonSchemaResponse(updateResponse, 200, bookingSchema);
@@ -64,7 +54,7 @@ describe('Booking CRUD', () => {
 
   test('partially updates a booking with PATCH using token auth', async () => {
     const createResponse = await bookingClient.createBooking(buildBooking());
-    cleanup.trackBooking(createResponse.body.bookingid);
+    suite.trackBooking(createResponse.body.bookingid);
 
     const patchResponse = await bookingClient.patchBooking(
       createResponse.body.bookingid,
@@ -75,7 +65,7 @@ describe('Booking CRUD', () => {
           checkout: '2026-07-20',
         },
       },
-      { token: authToken },
+      { token: suite.authToken },
     );
 
     expectJsonSchemaResponse(patchResponse, 200, bookingSchema);
@@ -87,8 +77,8 @@ describe('Booking CRUD', () => {
     const createResponse = await bookingClient.createBooking(buildBooking());
     const bookingId = createResponse.body.bookingid;
 
-    const deleteResponse = await bookingClient.deleteBookingRobust(bookingId, {
-      token: authToken,
+    const deleteResponse = await bookingClient.deleteBookingStrict(bookingId, {
+      token: suite.authToken,
     });
 
     expect(deleteResponse.status).toBe(201);

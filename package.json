@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "prepare": "husky install"
   },
-  "author": "",
+  "author": "Cezar Vaz",
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.39.1",

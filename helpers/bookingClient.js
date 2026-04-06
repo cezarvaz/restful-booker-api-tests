@@ -2,7 +2,7 @@ const request = require('../config/request');
 const env = require('../config/env');
 
 class BookingClient {
-  async deleteBookingRobust(bookingId, options = {}) {
+  async deleteBookingWithFallback(bookingId, options = {}) {
     const firstResponse = await this.deleteBooking(bookingId, options);
 
     if ([201, 404, 405].includes(firstResponse.status)) {
@@ -26,6 +26,10 @@ class BookingClient {
     }
 
     return firstResponse;
+  }
+
+  deleteBookingStrict(bookingId, options = {}) {
+    return this.deleteBooking(bookingId, options);
   }
 
   ping() {

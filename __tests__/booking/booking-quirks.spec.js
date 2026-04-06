@@ -1,7 +1,6 @@
-const authClient = require('../../helpers/authClient');
 const bookingClient = require('../../helpers/bookingClient');
-const CleanupRegistry = require('../../helpers/cleanupRegistry');
 const { buildBooking } = require('../../factories/bookingFactory');
+const { useAuthenticatedSuite } = require('../../helpers/authenticatedSuite');
 const {
   expectJsonResponse,
   expectPlainTextResponse,
@@ -12,16 +11,7 @@ const {
 } = require('../../helpers/responseAssertions');
 
 describe('Booking Known Quirks', () => {
-  const cleanup = new CleanupRegistry();
-  let authToken;
-
-  beforeAll(async () => {
-    authToken = await authClient.getToken();
-  });
-
-  afterAll(async () => {
-    await cleanup.cleanup(bookingClient, authToken);
-  });
+  const { trackBooking } = useAuthenticatedSuite();
 
   test('returns a server error when firstname is missing instead of a validation error', async () => {
     const response = await bookingClient.createBooking({
@@ -58,7 +48,7 @@ describe('Booking Known Quirks', () => {
     );
 
     expectJsonResponse(response, 200);
-    cleanup.trackBooking(response.body.bookingid);
+    trackBooking(response.body.bookingid);
     expect(response.body.booking.firstname).toBe('');
     expect(response.body.booking.lastname).toBe('');
     expect(() =>
@@ -80,7 +70,7 @@ describe('Booking Known Quirks', () => {
     );
 
     expectJsonSchemaResponse(response, 200, bookingCreatedSchema);
-    cleanup.trackBooking(response.body.bookingid);
+    trackBooking(response.body.bookingid);
     expect(response.body.booking.bookingdates.checkin).toBe('2026-01-10');
     expect(response.body.booking.bookingdates.checkout).toBe('2026-01-02');
   });

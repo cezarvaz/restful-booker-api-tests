@@ -1,7 +1,6 @@
-const authClient = require('../../helpers/authClient');
 const bookingClient = require('../../helpers/bookingClient');
-const CleanupRegistry = require('../../helpers/cleanupRegistry');
 const { buildBooking } = require('../../factories/bookingFactory');
+const { useAuthenticatedSuite } = require('../../helpers/authenticatedSuite');
 const bookingSchema = require('../../schemas/booking/bookingSchema');
 const bookingCreatedSchema = require('../../schemas/booking/bookingCreatedSchema');
 const {
@@ -9,16 +8,7 @@ const {
 } = require('../../helpers/responseAssertions');
 
 describe('Booking Concurrency', () => {
-  const cleanup = new CleanupRegistry();
-  let authToken;
-
-  beforeAll(async () => {
-    authToken = await authClient.getToken();
-  });
-
-  afterAll(async () => {
-    await cleanup.cleanup(bookingClient, authToken);
-  });
+  const suite = useAuthenticatedSuite();
 
   test('creates multiple bookings concurrently with unique data', async () => {
     const payloads = [
@@ -33,7 +23,7 @@ describe('Booking Concurrency', () => {
 
     responses.forEach((response, index) => {
       expectJsonSchemaResponse(response, 200, bookingCreatedSchema);
-      cleanup.trackBooking(response.body.bookingid);
+      suite.trackBooking(response.body.bookingid);
       expect(response.body.booking.firstname).toBe(payloads[index].firstname);
     });
 
@@ -47,8 +37,8 @@ describe('Booking Concurrency', () => {
       bookingClient.createBooking(buildBooking({ firstname: 'ParallelTwo' })),
     ]);
 
-    cleanup.trackBooking(firstCreate.body.bookingid);
-    cleanup.trackBooking(secondCreate.body.bookingid);
+    suite.trackBooking(firstCreate.body.bookingid);
+    suite.trackBooking(secondCreate.body.bookingid);
     expectJsonSchemaResponse(firstCreate, 200, bookingCreatedSchema);
     expectJsonSchemaResponse(secondCreate, 200, bookingCreatedSchema);
 
@@ -56,12 +46,12 @@ describe('Booking Concurrency', () => {
       bookingClient.patchBooking(
         firstCreate.body.bookingid,
         { firstname: 'ParallelOneUpdated' },
-        { token: authToken },
+        { token: suite.authToken },
       ),
       bookingClient.patchBooking(
         secondCreate.body.bookingid,
         { firstname: 'ParallelTwoUpdated' },
-        { token: authToken },
+        { token: suite.authToken },
       ),
     ]);
 

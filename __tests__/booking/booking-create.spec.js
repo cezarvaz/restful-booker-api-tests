@@ -1,7 +1,6 @@
-const authClient = require('../../helpers/authClient');
 const bookingClient = require('../../helpers/bookingClient');
-const CleanupRegistry = require('../../helpers/cleanupRegistry');
 const { buildBooking } = require('../../factories/bookingFactory');
+const { useAuthenticatedSuite } = require('../../helpers/authenticatedSuite');
 const bookingCreatedSchema = require('../../schemas/booking/bookingCreatedSchema');
 const {
   expectJsonResponse,
@@ -9,16 +8,7 @@ const {
 } = require('../../helpers/responseAssertions');
 
 describe('Booking Create Variants', () => {
-  const cleanup = new CleanupRegistry();
-  let authToken;
-
-  beforeAll(async () => {
-    authToken = await authClient.getToken();
-  });
-
-  afterAll(async () => {
-    await cleanup.cleanup(bookingClient, authToken);
-  });
+  const { trackBooking } = useAuthenticatedSuite();
 
   test('creates a booking without additional needs', async () => {
     const response = await bookingClient.createBooking(
@@ -26,7 +16,7 @@ describe('Booking Create Variants', () => {
     );
 
     expectJsonSchemaResponse(response, 200, bookingCreatedSchema);
-    cleanup.trackBooking(response.body.bookingid);
+    trackBooking(response.body.bookingid);
     expect(response.body.booking).not.toHaveProperty('additionalneeds');
   });
 
@@ -36,7 +26,7 @@ describe('Booking Create Variants', () => {
     );
 
     expectJsonSchemaResponse(response, 200, bookingCreatedSchema);
-    cleanup.trackBooking(response.body.bookingid);
+    trackBooking(response.body.bookingid);
     expect(response.body.booking.depositpaid).toBe(false);
   });
 
@@ -49,7 +39,7 @@ describe('Booking Create Variants', () => {
     );
 
     expectJsonSchemaResponse(response, 200, bookingCreatedSchema);
-    cleanup.trackBooking(response.body.bookingid);
+    trackBooking(response.body.bookingid);
     expect(response.body.booking.firstname).toContain('QA Specialist');
     expect(response.body.booking.lastname).toContain("O'Connor");
   });
@@ -60,7 +50,7 @@ describe('Booking Create Variants', () => {
     );
 
     expectJsonSchemaResponse(response, 200, bookingCreatedSchema);
-    cleanup.trackBooking(response.body.bookingid);
+    trackBooking(response.body.bookingid);
     expect(response.body.booking.totalprice).toBe(0);
   });
 
@@ -78,7 +68,7 @@ describe('Booking Create Variants', () => {
     });
 
     expectJsonResponse(response, 200);
-    cleanup.trackBooking(response.body.bookingid);
+    trackBooking(response.body.bookingid);
     expect(response.body.booking.firstname).toBe('Weak');
     expect(response.body.booking.totalprice).toBeNull();
     expect(response.body.booking.depositpaid).toBe(true);

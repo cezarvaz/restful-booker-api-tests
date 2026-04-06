@@ -1,7 +1,7 @@
 const authClient = require('../../helpers/authClient');
 const bookingClient = require('../../helpers/bookingClient');
-const CleanupRegistry = require('../../helpers/cleanupRegistry');
 const { buildBooking } = require('../../factories/bookingFactory');
+const { useAuthenticatedSuite } = require('../../helpers/authenticatedSuite');
 const authFailureSchema = require('../../schemas/auth/authFailureSchema');
 const bookingCreatedSchema = require('../../schemas/booking/bookingCreatedSchema');
 const {
@@ -10,21 +10,12 @@ const {
 } = require('../../helpers/responseAssertions');
 
 describe('Booking Negative Cases', () => {
-  const cleanup = new CleanupRegistry();
-  let authToken;
-
-  beforeAll(async () => {
-    authToken = await authClient.getToken();
-  });
-
-  afterAll(async () => {
-    await cleanup.cleanup(bookingClient, authToken);
-  });
+  const { trackBooking } = useAuthenticatedSuite();
 
   test('rejects update without auth', async () => {
     const createResponse = await bookingClient.createBooking(buildBooking());
     expectJsonSchemaResponse(createResponse, 200, bookingCreatedSchema);
-    cleanup.trackBooking(createResponse.body.bookingid);
+    trackBooking(createResponse.body.bookingid);
 
     const updateResponse = await bookingClient.updateBooking(
       createResponse.body.bookingid,
@@ -37,7 +28,7 @@ describe('Booking Negative Cases', () => {
   test('rejects patch without auth', async () => {
     const createResponse = await bookingClient.createBooking(buildBooking());
     expectJsonSchemaResponse(createResponse, 200, bookingCreatedSchema);
-    cleanup.trackBooking(createResponse.body.bookingid);
+    trackBooking(createResponse.body.bookingid);
 
     const patchResponse = await bookingClient.patchBooking(
       createResponse.body.bookingid,
@@ -50,7 +41,7 @@ describe('Booking Negative Cases', () => {
   test('rejects delete without auth', async () => {
     const createResponse = await bookingClient.createBooking(buildBooking());
     expectJsonSchemaResponse(createResponse, 200, bookingCreatedSchema);
-    cleanup.trackBooking(createResponse.body.bookingid);
+    trackBooking(createResponse.body.bookingid);
 
     const deleteResponse = await bookingClient.deleteBooking(
       createResponse.body.bookingid,

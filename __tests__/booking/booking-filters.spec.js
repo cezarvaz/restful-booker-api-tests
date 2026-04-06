@@ -1,7 +1,6 @@
 const bookingClient = require('../../helpers/bookingClient');
-const CleanupRegistry = require('../../helpers/cleanupRegistry');
-const authClient = require('../../helpers/authClient');
 const { buildBooking } = require('../../factories/bookingFactory');
+const { useAuthenticatedSuite } = require('../../helpers/authenticatedSuite');
 const bookingIdListSchema = require('../../schemas/booking/bookingIdListSchema');
 const bookingCreatedSchema = require('../../schemas/booking/bookingCreatedSchema');
 const {
@@ -9,12 +8,10 @@ const {
 } = require('../../helpers/responseAssertions');
 
 describe('Booking Filters', () => {
-  const cleanup = new CleanupRegistry();
-  let authToken;
+  const { trackBooking } = useAuthenticatedSuite();
   let referenceBooking;
 
   beforeAll(async () => {
-    authToken = await authClient.getToken();
     const createResponse = await bookingClient.createBooking(
       buildBooking({
         firstname: 'FilterFirst',
@@ -28,11 +25,7 @@ describe('Booking Filters', () => {
 
     referenceBooking = createResponse.body;
     expectJsonSchemaResponse(createResponse, 200, bookingCreatedSchema);
-    cleanup.trackBooking(referenceBooking.bookingid);
-  });
-
-  afterAll(async () => {
-    await cleanup.cleanup(bookingClient, authToken);
+    trackBooking(referenceBooking.bookingid);
   });
 
   test('lists bookings as an id array', async () => {
@@ -81,7 +74,7 @@ describe('Booking Filters', () => {
       }),
     );
     expectJsonSchemaResponse(createResponse, 200, bookingCreatedSchema);
-    cleanup.trackBooking(createResponse.body.bookingid);
+    trackBooking(createResponse.body.bookingid);
 
     const [byFirstResponse, byLastResponse] = await Promise.all([
       bookingClient.listBookings({ firstname: 'Encoded Name' }),
