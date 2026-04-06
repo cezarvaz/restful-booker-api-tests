@@ -11,7 +11,7 @@
         "filename": "report.html",
         "expand": true,
         "openReport": false,
-        "pageTitle": "Test Report - Restful Booker API Test Suite"
+        "pageTitle": "Test Report - Restful Booker API Tests"
       }
     ]
   ]
