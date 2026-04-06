@@ -13,7 +13,9 @@ class CleanupRegistry {
 
   async cleanup(client, authToken) {
     for (const bookingId of this.bookingIds) {
-      const response = await client.deleteBooking(bookingId, { token: authToken });
+      const response = await client.deleteBookingRobust(bookingId, {
+        token: authToken,
+      });
 
       if (![201, 404, 405].includes(response.status)) {
         throw new Error(

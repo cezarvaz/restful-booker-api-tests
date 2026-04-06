@@ -87,7 +87,7 @@ describe('Booking CRUD', () => {
     const createResponse = await bookingClient.createBooking(buildBooking());
     const bookingId = createResponse.body.bookingid;
 
-    const deleteResponse = await bookingClient.deleteBooking(bookingId, {
+    const deleteResponse = await bookingClient.deleteBookingRobust(bookingId, {
       token: authToken,
     });
 

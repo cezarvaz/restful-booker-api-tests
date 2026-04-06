@@ -14,6 +14,24 @@ describe('Booking Workflow', () => {
   const cleanup = new CleanupRegistry();
   let authToken;
 
+  async function listBookingIdsByFirstname(firstname, attempts = 4) {
+    for (let attempt = 1; attempt <= attempts; attempt += 1) {
+      const response = await bookingClient.listBookings({ firstname });
+
+      expectJsonSchemaResponse(response, 200, bookingIdListSchema);
+
+      const ids = response.body.map(({ bookingid }) => bookingid);
+
+      if (ids.length > 0 || attempt === attempts) {
+        return ids;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    }
+
+    return [];
+  }
+
   beforeAll(async () => {
     authToken = await authClient.getToken();
   });
@@ -66,7 +84,7 @@ describe('Booking Workflow', () => {
     expect(patchResponse.body.firstname).toBe('WorkflowPatched');
     expect(patchResponse.body.lastname).toBe('Updated');
 
-    const deleteResponse = await bookingClient.deleteBooking(bookingId, {
+    const deleteResponse = await bookingClient.deleteBookingRobust(bookingId, {
       token: authToken,
     });
 
@@ -92,7 +110,7 @@ describe('Booking Workflow', () => {
     expectJsonSchemaResponse(patchResponse, 200, bookingSchema);
     expect(patchResponse.body.firstname).toBe('BasicAuthPatched');
 
-    const deleteResponse = await bookingClient.deleteBooking(bookingId, {
+    const deleteResponse = await bookingClient.deleteBookingRobust(bookingId, {
       token: authToken,
     });
 
@@ -101,27 +119,20 @@ describe('Booking Workflow', () => {
   });
 
   test('makes a created booking discoverable through stable firstname filtering', async () => {
+    const firstname = `WorkflowFilterable-${Date.now()}`;
     const createResponse = await bookingClient.createBooking(
       buildBooking({
-        firstname: 'WorkflowFilterable',
+        firstname,
       }),
     );
     const bookingId = createResponse.body.bookingid;
     expectJsonSchemaResponse(createResponse, 200, bookingCreatedSchema);
     cleanup.trackBooking(bookingId);
 
-    const filterResponse = await bookingClient.listBookings({
-      firstname: 'WorkflowFilterable',
-    });
+    const bookingIds = await listBookingIdsByFirstname(firstname);
+    expect(bookingIds).toContain(bookingId);
 
-    expectJsonSchemaResponse(
-      filterResponse,
-      200,
-      bookingIdListSchema,
-    );
-    expect(filterResponse.body.map(({ bookingid }) => bookingid)).toContain(bookingId);
-
-    const deleteResponse = await bookingClient.deleteBooking(bookingId, {
+    const deleteResponse = await bookingClient.deleteBookingRobust(bookingId, {
       token: authToken,
     });
 

@@ -25,7 +25,9 @@ describe('Auth Session Usage', () => {
     expectJsonSchemaResponse(patchResponse, 200, bookingSchema);
     expect(patchResponse.body.firstname).toBe('TokenReused');
 
-    const deleteResponse = await bookingClient.deleteBooking(bookingId, { token });
+    const deleteResponse = await bookingClient.deleteBookingRobust(bookingId, {
+      token,
+    });
 
     expect(deleteResponse.status).toBe(201);
 

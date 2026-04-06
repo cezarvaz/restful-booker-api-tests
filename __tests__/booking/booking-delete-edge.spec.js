@@ -19,7 +19,7 @@ describe('Booking Delete Edge Cases', () => {
     const bookingId = createResponse.body.bookingid;
     expectJsonSchemaResponse(createResponse, 200, bookingCreatedSchema);
 
-    const deleteResponse = await bookingClient.deleteBooking(bookingId, {
+    const deleteResponse = await bookingClient.deleteBookingRobust(bookingId, {
       useBasicAuth: true,
     });
 
@@ -28,7 +28,7 @@ describe('Booking Delete Edge Cases', () => {
   });
 
   test('returns a not found style response when deleting a nonexistent booking', async () => {
-    const deleteResponse = await bookingClient.deleteBooking(999999999, {
+    const deleteResponse = await bookingClient.deleteBookingRobust(999999999, {
       token: authToken,
     });
 
@@ -41,10 +41,10 @@ describe('Booking Delete Edge Cases', () => {
     const bookingId = createResponse.body.bookingid;
     expectJsonSchemaResponse(createResponse, 200, bookingCreatedSchema);
 
-    const firstDelete = await bookingClient.deleteBooking(bookingId, {
+    const firstDelete = await bookingClient.deleteBookingRobust(bookingId, {
       token: authToken,
     });
-    const secondDelete = await bookingClient.deleteBooking(bookingId, {
+    const secondDelete = await bookingClient.deleteBookingRobust(bookingId, {
       token: authToken,
     });
 
